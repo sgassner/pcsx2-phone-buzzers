@@ -71,7 +71,12 @@ def style(text, code):
 
 
 def log(message):
-    print(f"{style(time.strftime('%H:%M:%S'), '2')}  {message}", flush=True)
+    line = f"{style(time.strftime('%H:%M:%S'), '2')}  {message}"
+    try:
+        print(line, flush=True)
+    except UnicodeEncodeError:  # output that can't show ● ▼ … (e.g. redirected on Windows, cp1252)
+        encoding = sys.stdout.encoding or "ascii"
+        print(line.encode(encoding, "replace").decode(encoding), flush=True)
 
 
 def enable_windows_colors():

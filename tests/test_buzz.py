@@ -19,6 +19,7 @@ from aiohttp.test_utils import TestClient, TestServer  # noqa: E402
 
 WINDOWS = sys.platform == "win32"
 results = []
+sys.stdout.reconfigure(errors="replace")  # test names contain → etc.; don't crash on cp1252 consoles
 
 
 def check(name, cond, detail=""):
@@ -50,6 +51,8 @@ async def sync(ws):
         msg = await ws.receive(timeout=5)
         if msg.type == WSMsgType.TEXT and json.loads(msg.data) == {"type": "pong"}:
             return
+        if msg.type in (WSMsgType.CLOSE, WSMsgType.CLOSED, WSMsgType.CLOSING, WSMsgType.ERROR):
+            raise ConnectionError(f"server closed the connection unexpectedly ({msg.type.name})")
 
 
 async def wait_for(pred, timeout=3.0):
