@@ -1,0 +1,3 @@
+aiohttp>=3.9      # web server + WebSocket
+pynput>=1.7       # simulated key presses
+qrcode>=7         # optional: QR code in the terminal (everything works without it, just no QR)

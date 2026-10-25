@@ -1,0 +1,57 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: ${{ matrix.os }} · Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: windows-latest, python: "3.9" }
+          - { os: windows-latest, python: "3.14" }
+          - { os: macos-latest, python: "3.10" }
+          - { os: macos-latest, python: "3.14" }
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -r requirements.txt
+      - run: python tests/test_buzz.py
+
+  launchers:
+    name: start file · ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: First start sets up .venv, second start reuses it (Windows)
+        if: runner.os == 'Windows'
+        shell: cmd
+        run: |
+          call "Start Buzz (Windows).bat" --version < NUL || exit /b 1
+          if not exist .venv\Scripts\python.exe exit /b 1
+          call "Start Buzz (Windows).bat" --version < NUL || exit /b 1
+      - name: First start sets up .venv, second start reuses it (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          "./Start Buzz (Mac).command" --version < /dev/null
+          test -x .venv/bin/python
+          "./Start Buzz (Mac).command" --version < /dev/null
